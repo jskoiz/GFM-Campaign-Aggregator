@@ -1,0 +1,35 @@
+{
+  "name": "GFM Campaign Aggregator",
+  "version": "1.0.0",
+  "description": "A tool to aggregate data from GoFundMe campaigns",
+  "type": "module",
+  "main": "main.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "start": "node main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "scraper",
+    "gofundme",
+    "aggregator",
+    "campaign",
+    "data"
+  ],
+  "author": "jskoiz",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.4.0",
+    "cheerio": "^1.0.0-rc.12",
+    "csv-parser": "^3.0.0",
+    "exceljs": "^4.3.0",
+    "fs": "^0.0.1-security",
+    "p-queue": "^7.3.4",
+    "puppeteer": "^21.0.3",
+    "url": "^0.11.0",
+    "xml-parser": "^1.2.1",
+    "xml2js": "^0.6.2"
+  }
+}
