@@ -1,8 +1,8 @@
 # GFM Campaign Aggregator
-The GFM Campaign Aggregator is a tool designed to process GoFundMe campaign links from an Excel or CSV file and gather key details about each campaign. It fetches the current raised amount, the total fundraising goal, and the campaign picture for each link provided.
+The GFM Campaign Aggregator is a tool designed to process GoFundMe campaign links from an Excel file and gather key details about each campaign. It fetches the current raised amount, the total fundraising goal, and the campaign picture for each link provided.
 
 ## Features
-- **Input Formats**: Accepts both Excel and CSV files.
+- **Input Formats**: Accepts Excel .xlsx files only. CSV support coming later
 - **Output Format**: Produces a detailed Excel sheet with the gathered data.
 - **Concurrency Control**: Processes multiple links concurrently for faster results.
 
@@ -15,7 +15,7 @@ You can install the required dependencies using your preferred package manager:
 
 
 ## How to Use
-1. Ensure your input file (Excel or CSV) is named `source` (like `source.xlsx` or `source.csv`). 
+1. Ensure your input file (Excel) is named `source` (like `source.xlsx`). 
 2. Place all the GoFundMe campaign links in column A of this file.
 3. Run the tool: `node main`.
 

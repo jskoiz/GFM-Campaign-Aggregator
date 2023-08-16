@@ -2,7 +2,6 @@ import axios from 'axios';
 import cheerio from 'cheerio';
 import ExcelJS from 'exceljs';
 import fs from 'fs';
-import csvParser from 'csv-parser';
 import { URL } from 'url';
 
 const CONCURRENT_LIMIT = 100;
@@ -10,9 +9,6 @@ const CONCURRENT_LIMIT = 100;
 function getSourceFile() {
     if (fs.existsSync('source.xlsx')) {
         return 'source.xlsx';
-    }
-    if (fs.existsSync('source.csv')) {
-        return 'source.csv';
     }
     return null;
 }
@@ -30,34 +26,18 @@ async function readURLsFromFile(filename) {
     const urls = [];
     console.log(`Reading URLs from ${filename}...`);
 
-    const ext = filename.slice(((filename.lastIndexOf(".") - 1) >>> 0) + 2);
-
-    if (ext === 'xlsx') {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(filename);
-        const worksheet = workbook.getWorksheet(1);
-        worksheet.eachRow(row => {
-            if (row.hasValues) {
-                urls.push(row.getCell(1).text);
-            }
-        });
-    } else if (ext === 'csv') {
-        return new Promise((resolve, reject) => {
-            fs.createReadStream(filename)
-                .pipe(csvParser())
-                .on('data', row => urls.push(row.URL))
-                .on('end', () => {
-                    console.log('Finished reading CSV file.');
-                    resolve(urls);
-                })
-                .on('error', err => reject(err));
-        });
-    } else {
-        throw new Error('Unsupported file format');
-    }
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(filename);
+    const worksheet = workbook.getWorksheet(1);
+    worksheet.eachRow(row => {
+        if (row.hasValues) {
+            urls.push(row.getCell(1).text);
+        }
+    });
 
     return urls.filter(isValidUrl);
 }
+
 
 async function fetchData(url) {
     try {
@@ -165,7 +145,7 @@ async function main(inputFilename) {
 }
 const inputFilename = getSourceFile();
 if (!inputFilename) {
-    console.error('Please ensure a source.xlsx or source.csv file is in the current directory.');
+    console.error('Please ensure a source.xlsx file is in the current directory.');
     process.exit(1);
 }
 
