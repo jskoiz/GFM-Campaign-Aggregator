@@ -13,24 +13,20 @@ The GFM Campaign Aggregator is a tool designed to process GoFundMe campaign link
 You can install the required dependencies using your preferred package manager:
 
 
-# Using npm
-```npm install``
+```
+npm install
 
-# Using yarn
-```yarn install```
+yarn install
 
-# Using pnpm
-```pnpm install```
-
+pnpm install
+```
 ---
 
 ## How to Use
 
 1. Ensure your input file (Excel or CSV) is named `source` (like `source.xlsx` or `source.csv`). 
 2. Place all the GoFundMe campaign links in column A of this file.
-3. Run the tool:
-
-node main
+3. Run the tool: `node main`
 
 ---
 
