@@ -1,4 +1,3 @@
-// 1. Imports
 import axios from 'axios';
 import cheerio from 'cheerio';
 import ExcelJS from 'exceljs';
@@ -63,9 +62,8 @@ async function readURLsFromFile(filename) {
 async function fetchData(url) {
     try {
         console.log(`Fetching data from ${url}...`);
-        const response = await axios.get(url, { maxRedirects: 5 }); // Following up to 5 redirects. Adjust as needed.
+        const response = await axios.get(url, { maxRedirects: 5 });
 
-        // Return both cheerio loaded data and the final URL
         return {
             $: cheerio.load(response.data),
             finalUrl: response.request.res.responseUrl
@@ -128,26 +126,20 @@ async function asyncPool(poolLimit, array, iteratorFn) {
 
 async function main(inputFilename) {
     const urls = await readURLsFromFile(inputFilename);
-    const errors = [];
 
     const results = await asyncPool(CONCURRENT_LIMIT, urls, async (url) => {
         try {
             const data = await fetchData(url);
-            if (!data) return null;
+            if (!data) return { error: `Error fetching ${url}` };
             
-            // Use the finalUrl if needed elsewhere in your code
-            return extractData(data.$, data.finalUrl);
+            const extractedData = extractData(data.$, data.finalUrl);
+            if (!extractedData) return { error: `Error extracting data from ${url}` };
+    
+            return { data: extractedData, error: null };
         } catch (error) {
-            errors.push(`Error processing ${url}: ${error.message}`);
-            return null;
+            return { error: `Error processing ${url}: ${error.message}` };
         }
     });
-    if (errors.length) {
-        console.error('Errors encountered during processing:');
-        errors.forEach(error => console.error(error));
-    }
-
-    const validResults = results.filter(r => r !== null);
 
     console.log('Writing extracted data to gfm-campaign-details.xlsx...');
     const workbook = new ExcelJS.Workbook();
@@ -156,16 +148,21 @@ async function main(inputFilename) {
         { header: 'Title', key: 'title' },
         { header: 'Raised Amount', key: 'raisedAmount' },
         { header: 'Target Amount', key: 'targetAmount' },
-        { header: 'Image URL', key: 'imageUrl' }
+        { header: 'Image URL', key: 'imageUrl' },
+        { header: 'Error', key: 'error' }  // New column for errors
     ];
-    validResults.forEach(item => {
-        worksheet.addRow(item);
+    
+    results.forEach(item => {
+        if (item.error) {
+            worksheet.addRow({ title: 'N/A', raisedAmount: 'N/A', targetAmount: 'N/A', imageUrl: 'N/A', error: item.error });
+        } else {
+            worksheet.addRow({ ...item.data, error: null });
+        }
     });
-
+    
     await workbook.xlsx.writeFile('gfm-campaign-details.xlsx');
     console.log('Data written to gfm-campaign-details.xlsx successfully.');
 }
-
 const inputFilename = getSourceFile();
 if (!inputFilename) {
     console.error('Please ensure a source.xlsx or source.csv file is in the current directory.');
