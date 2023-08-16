@@ -14,17 +14,15 @@ You can install the required dependencies using your preferred package manager:
 
 
 # Using npm
-npm install
+```npm install``
 
 # Using yarn
-yarn install
+```yarn install```
 
 # Using pnpm
-pnpm install
+```pnpm install```
 
 ---
-
-**How to Use**:
 
 ## How to Use
 
@@ -35,8 +33,6 @@ pnpm install
 node main
 
 ---
-
-**Configuration**:
 
 ## Configuration
 
