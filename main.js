@@ -1,3 +1,4 @@
+// 1. Imports
 import axios from 'axios';
 import cheerio from 'cheerio';
 import ExcelJS from 'exceljs';
@@ -7,7 +8,16 @@ import { URL } from 'url';
 
 const CONCURRENT_LIMIT = 100;
 
-// URL validation function
+function getSourceFile() {
+    if (fs.existsSync('source.xlsx')) {
+        return 'source.xlsx';
+    }
+    if (fs.existsSync('source.csv')) {
+        return 'source.csv';
+    }
+    return null;
+}
+
 function isValidUrl(string) {
     try {
         new URL(string);
@@ -15,6 +25,39 @@ function isValidUrl(string) {
     } catch (_) {
         return false;
     }
+}
+
+async function readURLsFromFile(filename) {
+    const urls = [];
+    console.log(`Reading URLs from ${filename}...`);
+
+    const ext = filename.slice(((filename.lastIndexOf(".") - 1) >>> 0) + 2);
+
+    if (ext === 'xlsx') {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(filename);
+        const worksheet = workbook.getWorksheet(1);
+        worksheet.eachRow(row => {
+            if (row.hasValues) {
+                urls.push(row.getCell(2).text);
+            }
+        });
+    } else if (ext === 'csv') {
+        return new Promise((resolve, reject) => {
+            fs.createReadStream(filename)
+                .pipe(csvParser())
+                .on('data', row => urls.push(row.B))
+                .on('end', () => {
+                    console.log('Finished reading CSV file.');
+                    resolve(urls);
+                })
+                .on('error', err => reject(err));
+        });
+    } else {
+        throw new Error('Unsupported file format');
+    }
+
+    return urls.filter(isValidUrl);
 }
 
 async function fetchData(url) {
@@ -26,22 +69,6 @@ async function fetchData(url) {
         console.warn(`Error fetching data from ${url}:`, error.message);
         return null;
     }
-}
-
-async function asyncPool(poolLimit, array, iteratorFn) {
-    const ret = [];
-    const executing = [];
-    for (const item of array) {
-        const p = Promise.resolve().then(() => iteratorFn(item));
-        ret.push(p);
-
-        if (executing.push(p) > poolLimit) {
-            executing.splice(executing.indexOf(await Promise.race(executing)), 1);
-        }
-    }
-
-    await Promise.all(executing);
-    return Promise.all(ret);
 }
 
 function extractData($, url) {
@@ -78,37 +105,20 @@ function extractData($, url) {
     }
 }
 
-async function readURLsFromFile(filename) {
-    const urls = [];
-    console.log(`Reading URLs from ${filename}...`);
+async function asyncPool(poolLimit, array, iteratorFn) {
+    const ret = [];
+    const executing = [];
+    for (const item of array) {
+        const p = Promise.resolve().then(() => iteratorFn(item));
+        ret.push(p);
 
-    const ext = filename.slice(((filename.lastIndexOf(".") - 1) >>> 0) + 2);
-
-    if (ext === 'xlsx') {
-        const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.readFile(filename);
-        const worksheet = workbook.getWorksheet(1);
-        worksheet.eachRow(row => {
-            if (row.hasValues) {
-                urls.push(row.getCell(2).text);  // Assuming URLs are in column B
-            }
-        });
-    } else if (ext === 'csv') {
-        return new Promise((resolve, reject) => {
-            fs.createReadStream(filename)
-                .pipe(csvParser())
-                .on('data', row => urls.push(row.B))
-                .on('end', () => {
-                    console.log('Finished reading CSV file.');
-                    resolve(urls);
-                })
-                .on('error', err => reject(err));
-        });
-    } else {
-        throw new Error('Unsupported file format');
+        if (executing.push(p) > poolLimit) {
+            executing.splice(executing.indexOf(await Promise.race(executing)), 1);
+        }
     }
 
-    return urls.filter(isValidUrl);
+    await Promise.all(executing);
+    return Promise.all(ret);
 }
 
 async function main(inputFilename) {
@@ -130,9 +140,9 @@ async function main(inputFilename) {
         errors.forEach(error => console.error(error));
     }
 
-    const validResults = results.filter(r => r !== null); // Filter out null results
+    const validResults = results.filter(r => r !== null);
 
-    console.log('Writing extracted data to GoFundMe-Details.xlsx...');
+    console.log('Writing extracted data to gfm-campaign-details.xlsx...');
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet('Scraped Data');
     worksheet.columns = [
@@ -145,15 +155,16 @@ async function main(inputFilename) {
         worksheet.addRow(item);
     });
 
-    await workbook.xlsx.writeFile('GoFundMe-Details.xlsx');
-    console.log('Data written to GoFundMe-Details.xlsx successfully.');
+    await workbook.xlsx.writeFile('gfm-campaign-details.xlsx');
+    console.log('Data written to gfm-campaign-details.xlsx successfully.');
 }
 
-const inputFilename = process.argv[2];
+const inputFilename = getSourceFile();
 if (!inputFilename) {
-    console.error('Please provide an input filename.');
+    console.error('Please ensure a source.xlsx or source.csv file is in the current directory.');
     process.exit(1);
 }
+
 main(inputFilename).catch(err => {
     console.error('An error occurred:', err);
 });
