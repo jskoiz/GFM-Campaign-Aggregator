@@ -19,6 +19,9 @@ You can install the required dependencies using your preferred package manager:
 2. Place all the GoFundMe campaign links in column A of this file.
 3. Run the tool: `node main`.
 
+## Deploy to Repl.it
+[![Run on Repl.it](https://replit.com/badge/github/jskoiz/GFM-Campaign-Aggregator)](https://replit.com/new/github/jskoiz/GFM-Campaign-Aggregator)
+
 ## Configuration
 - **Speed and Scope**: Adjust the `CONCURRENT_LIMIT` in the script to control how many links are processed at once. A higher number will be faster but may require more system resources.
 
