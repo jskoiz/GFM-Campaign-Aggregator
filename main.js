@@ -39,14 +39,14 @@ async function readURLsFromFile(filename) {
         const worksheet = workbook.getWorksheet(1);
         worksheet.eachRow(row => {
             if (row.hasValues) {
-                urls.push(row.getCell(2).text);
+                urls.push(row.getCell(1).text);
             }
         });
     } else if (ext === 'csv') {
         return new Promise((resolve, reject) => {
             fs.createReadStream(filename)
                 .pipe(csvParser())
-                .on('data', row => urls.push(row.B))
+                .on('data', row => urls.push(row.URL))
                 .on('end', () => {
                     console.log('Finished reading CSV file.');
                     resolve(urls);
