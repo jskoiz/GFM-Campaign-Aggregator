@@ -63,8 +63,13 @@ async function readURLsFromFile(filename) {
 async function fetchData(url) {
     try {
         console.log(`Fetching data from ${url}...`);
-        const result = await axios.get(url);
-        return cheerio.load(result.data);
+        const response = await axios.get(url, { maxRedirects: 5 }); // Following up to 5 redirects. Adjust as needed.
+
+        // Return both cheerio loaded data and the final URL
+        return {
+            $: cheerio.load(response.data),
+            finalUrl: response.request.res.responseUrl
+        };
     } catch (error) {
         console.warn(`Error fetching data from ${url}:`, error.message);
         return null;
@@ -74,12 +79,12 @@ async function fetchData(url) {
 function extractData($, url) {
     if (!$) return null;
 
-    try {
-        console.log('Extracting data from fetched content...');
-        
-        const titleElement = $('h1.p-campaign-title');
+    const titleElement = $('h1.p-campaign-title');
+    const title = titleElement.text().trim();
+    console.log(`Extracting data for campaign: "${title}"...`);
+
+    try {        
         if (!titleElement.length) throw new Error('Title not found');
-        const title = titleElement.text().trim();
 
         const dataDiv = $('div.progress-meter_progressMeterHeading__7dug0');
         const raisedAmountElement = dataDiv.find('div.hrt-disp-inline');
@@ -100,7 +105,7 @@ function extractData($, url) {
 
         return { title, raisedAmount, targetAmount, imageUrl };
     } catch (error) {
-        console.warn(`Error extracting data from ${url}:`, error.message);
+        console.warn(`Error extracting data for campaign: "${title}"`, error.message);
         return null;
     }
 }
@@ -127,14 +132,16 @@ async function main(inputFilename) {
 
     const results = await asyncPool(CONCURRENT_LIMIT, urls, async (url) => {
         try {
-            const $ = await fetchData(url);
-            return extractData($, url);
+            const data = await fetchData(url);
+            if (!data) return null;
+            
+            // Use the finalUrl if needed elsewhere in your code
+            return extractData(data.$, data.finalUrl);
         } catch (error) {
             errors.push(`Error processing ${url}: ${error.message}`);
             return null;
         }
     });
-
     if (errors.length) {
         console.error('Errors encountered during processing:');
         errors.forEach(error => console.error(error));
