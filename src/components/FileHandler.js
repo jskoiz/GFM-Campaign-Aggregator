@@ -1,20 +1,22 @@
-import fs from 'fs';
-import { URL } from 'url';
-import ExcelJS from 'exceljs';
+import fs from 'fs'; // Import the fs module for filesystem operations
+import Airtable from 'airtable';
+import 'dotenv/config';
 
-export function getSourceFile() {
-    if (fs.existsSync('source.xlsx')) {
-        return 'source.xlsx';
-    }
-    return null;
-}
+export async function readURLsFromAirtable() {
+    const apiKey = process.env.AIRTABLE_API_KEY;
+    const baseId = process.env.AIRTABLE_BASE_ID;
+    const table = 'List'; // Replace with your actual table name
 
-export function isValidUrl(string) {
+    const base = new Airtable({ apiKey }).base(baseId);
+
     try {
-        new URL(string);
-        return true;
-    } catch (_) {
-        return false;
+        console.log(`Reading URLs from Airtable...`);
+        const records = await base(table).select().all();
+
+        return records.map(record => record.get('URLS')); // Use the correct column name
+    } catch (error) {
+        console.warn(`Error reading URLs from Airtable:`, error.message);
+        return [];
     }
 }
 
@@ -32,4 +34,20 @@ export async function readURLsFromFile(filename) {
     });
 
     return urls.filter(isValidUrl);
+}
+
+export function isValidUrl(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+export function getSourceFile() {
+    if (fs.existsSync('source.xlsx')) {
+        return 'source.xlsx';
+    }
+    return null;
 }
