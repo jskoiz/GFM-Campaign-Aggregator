@@ -4,7 +4,7 @@ import { fetchData, extractData } from './components/DataFetcher.js';
 import { asyncPool } from './components/Concurrency.js';
 import { writeResultsToAirtable } from './components/ExcelWriter.js'; // Update the import
 
-const CONCURRENT_LIMIT = 100; // Define the concurrent limit
+const CONCURRENT_LIMIT = 20; // Define the concurrent limit
 
 async function main() {
     const urls = await readURLsFromAirtable();

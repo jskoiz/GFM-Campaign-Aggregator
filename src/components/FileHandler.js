@@ -5,7 +5,7 @@ import 'dotenv/config';
 export async function readURLsFromAirtable() {
     const apiKey = process.env.AIRTABLE_API_KEY;
     const baseId = process.env.AIRTABLE_BASE_ID;
-    const table = 'List'; // Replace with your actual table name
+    const table = 'Link Source List'; // Replace with your actual table name
 
     const base = new Airtable({ apiKey }).base(baseId);
 
@@ -43,11 +43,4 @@ export function isValidUrl(string) {
     } catch (_) {
         return false;
     }
-}
-
-export function getSourceFile() {
-    if (fs.existsSync('source.xlsx')) {
-        return 'source.xlsx';
-    }
-    return null;
 }

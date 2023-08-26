@@ -43,7 +43,26 @@ export function extractData($, url) {
         const imageUrlMatch = imageDivStyle.match(/url\(["']?(.*?)["']?\)/);
         const imageUrl = imageUrlMatch ? imageUrlMatch[1] : null;
 
-        return { title, raisedAmount, targetAmount, imageUrl };
+        const teamAvatarDiv = $('div.hrt-team-avatar.hrt-avatar.hrt-avatar--small');
+        const teamFundraiser = teamAvatarDiv.length ? 'Yes' : 'No';
+
+        const descriptionDiv = $('div.o-campaign-story.hrt-mt-3');
+        const description = descriptionDiv
+            .find('div')
+            .map((_, el) => $(el).text().trim())
+            .get()
+            .join('\n\n'); 
+
+            return {
+                title,
+                raisedAmount,
+                targetAmount,
+                imageUrl,
+                teamFundraiser,
+                goFundMeLink: url,
+                description,
+            };
+
     } catch (error) {
         console.warn(`Error extracting data for campaign: "${title}"`, error.message);
         return null;
