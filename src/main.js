@@ -6,7 +6,6 @@ import { fetchData, extractData } from './components/DataFetcher.js';
 import { asyncPool } from './components/Concurrency.js';
 import { writeResultsToAirtable } from './components/DataWriter.js';
 import { cleanExistingRowsInAirtable } from './components/CleanTable.js'; 
-console.log("Logger test"); // This should appear in your log.txt
 
 const CONCURRENT_LIMIT = 20;
 
