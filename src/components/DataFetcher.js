@@ -11,15 +11,11 @@ async function pauseFetching(delay) {
 }
 
 async function fetchURL(url, index, totalCount) {
-    if (!url.includes('gofund')) {
-        console.log(`Skipping non-GoFundMe URL: ${url}`);
-        return null;
-    }
     console.log(`[${index + 1}/${totalCount}] Fetching data from ${url}...`);
-    return await axios.get(url, { maxRedirects: 5 });
+    return axios.get(url, { maxRedirects: 5 });
 }
 
-function processResponse(response, url) {
+function processResponse(response) {
     return {
         $: cheerio.load(response.data),
         finalUrl: response.request.res.responseUrl,
@@ -47,29 +43,17 @@ async function fetchDataWithBackoff(url, index, totalCount, retryCount = 0) {
         await pauseFetching(60000);
     }
 
+    if (!url.includes('gofund')) {
+        console.log(`Skipping non-GoFundMe URL: ${url}`);
+        return null;
+    }
+
     try {
         const response = await fetchURL(url, index, totalCount);
         if (!response) return null;
-        return processResponse(response, url);
+        return processResponse(response);
     } catch (error) {
         return await handleFetchError(error, url, index, totalCount, retryCount);
-    }
-}
-
-export function extractData($, url) {
-    if (!$) return null;
-
-    try {
-        const titleElement = $('h1.p-campaign-title');
-        if (!titleElement.length) throw new Error('Title not found');
-        const title = titleElement.text().trim();
-        console.log(`Extracting data for campaign: "${title}"...`);
-
-        const data = extractCampaignData($, title);
-        return { ...data, goFundMeLink: url };
-    } catch (error) {
-        console.warn(`Error extracting data for campaign: "${title}"`, error.message);
-        return null;
     }
 }
 
@@ -104,6 +88,23 @@ function extractCampaignData($, title) {
         teamFundraiser,
         description,
     };
+}
+
+export function extractData($, url) {
+    if (!$) return null;
+
+    try {
+        const titleElement = $('h1.p-campaign-title');
+        if (!titleElement.length) throw new Error('Title not found');
+        const title = titleElement.text().trim();
+        console.log(`Extracting data for campaign: "${title}"...`);
+
+        const data = extractCampaignData($, title);
+        return { ...data, goFundMeLink: url };
+    } catch (error) {
+        console.warn(`Error extracting data for campaign: "${title}"`, error.message);
+        return null;
+    }
 }
 
 export const fetchData = fetchDataWithBackoff;
