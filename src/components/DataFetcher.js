@@ -1,20 +1,56 @@
+//DataFetcher.js
 import axios from 'axios';
 import cheerio from 'cheerio';
 
-export async function fetchData(url) {
+// Global flag to control fetching
+let isFetchingPaused = false;
+
+async function pauseFetching(delay) {
+    isFetchingPaused = true;
+    console.log(`Pausing fetching for ${delay / 1000} seconds...`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    isFetchingPaused = false;
+}
+
+async function fetchDataWithBackoff(url, index, totalCount, retryCount = 0) {
+    if (isFetchingPaused) {
+        console.log(`Fetching is currently paused. Waiting before trying ${url} again...`);
+        await pauseFetching(60000); // Wait for 60 seconds before checking again
+    }
+
+    if (!url.includes('gofund')) {
+        console.log(`Skipping non-GoFundMe URL: ${url}`);
+        return null;
+    }
+
     try {
-        console.log(`Fetching data from ${url}...`);
+        console.log(`[${index + 1}/${totalCount}] Fetching data from ${url}...`);
         const response = await axios.get(url, { maxRedirects: 5 });
 
         return {
             $: cheerio.load(response.data),
-            finalUrl: response.request.res.responseUrl
+            finalUrl: response.request.res.responseUrl,
+            status: 'success' // Add status here
         };
     } catch (error) {
-        console.warn(`Error fetching data from ${url}:`, error.message);
-        return null;
+        if (error.response && error.response.status === 403) {
+            if (retryCount >= 2) {
+                console.error("Encountered 403 error for the third time. Exiting process.");
+                process.exit(1);
+            }
+
+            const waitTime = (60 * (retryCount + 1)) * 1000; // 60 seconds for first retry, 120 for second
+            await pauseFetching(waitTime);
+            return fetchDataWithBackoff(url, index, totalCount, retryCount + 1);
+            
+        }
+
+        console.error(`Error fetching data from ${url}:`, error.message);
+        throw error;
     }
 }
+
+export const fetchData = fetchDataWithBackoff;
 
 export function extractData($, url) {
     if (!$) return null;
@@ -67,4 +103,5 @@ export function extractData($, url) {
         console.warn(`Error extracting data for campaign: "${title}"`, error.message);
         return null;
     }
+    
 }

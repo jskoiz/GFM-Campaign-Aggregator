@@ -1,3 +1,4 @@
+// main.js
 import 'dotenv/config';
 import { readURLsFromAirtable } from './components/FileHandler.js';
 import { fetchData, extractData } from './components/DataFetcher.js';
@@ -16,19 +17,19 @@ async function main() {
 
     const results = await asyncPool(CONCURRENT_LIMIT, urls, async (url, index) => {
         try {
-            const data = await fetchData(url, index, totalCount);
-            if (!data) {
-                return { error: `Error fetching ${url}` };
+            const fetchResult = await fetchData(url, index, totalCount);
+            if (!fetchResult || fetchResult.error) {
+                return { url, error: `Error fetching ${url}`, status: 'error' };
             }
 
-            const extractedData = extractData(data.$, data.finalUrl);
+            const extractedData = extractData(fetchResult.$, fetchResult.finalUrl);
             if (!extractedData) {
-                return { error: `Error extracting data from ${url}` };
+                return { url, error: `Error extracting data from ${url}`, status: 'error' };
             }
 
-            return { data: extractedData, error: null };
+            return { data: extractedData, error: null, status: 'success' };
         } catch (error) {
-            return { error: `Error processing ${url}: ${error.message}` };
+            return { url, error: `Error processing ${url}: ${error.message}`, status: 'error' };
         }
     });
 
