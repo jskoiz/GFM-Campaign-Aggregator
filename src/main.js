@@ -3,39 +3,36 @@ import { readURLsFromAirtable } from './components/FileHandler.js';
 import { fetchData, extractData } from './components/DataFetcher.js';
 import { asyncPool } from './components/Concurrency.js';
 import { writeResultsToAirtable } from './components/ExcelWriter.js';
+import { cleanExistingRowsInAirtable } from './components/CleanErrors.js'; // Adjust the path to where your cleaning function is located
 
 const CONCURRENT_LIMIT = 20;
-const BATCH_SIZE = 10; 
 
 async function main() {
+    // Clean the table before processing new data
+    await cleanExistingRowsInAirtable();
+
     const urls = await readURLsFromAirtable();
+    const totalCount = urls.length;
 
-    const totalBatches = Math.ceil(urls.length / BATCH_SIZE);
-    let processedCount = 0;
-
-    for (let i = 0; i < totalBatches; i++) {
-        const batchStart = i * BATCH_SIZE;
-        const batchUrls = urls.slice(batchStart, batchStart + BATCH_SIZE);
-
-        const results = await asyncPool(CONCURRENT_LIMIT, batchUrls, async (url) => {
-            try {
-                const data = await fetchData(url);
-                if (!data) return { error: `Error fetching ${url}` };
-
-                const extractedData = extractData(data.$, data.finalUrl);
-                if (!extractedData) return { error: `Error extracting data from ${url}` };
-
-                return { data: extractedData, error: null };
-            } catch (error) {
-                return { error: `Error processing ${url}: ${error.message}` };
+    const results = await asyncPool(CONCURRENT_LIMIT, urls, async (url, index) => {
+        try {
+            const data = await fetchData(url, index, totalCount);
+            if (!data) {
+                return { error: `Error fetching ${url}` };
             }
-        });
 
-        await writeResultsToAirtable(results);
+            const extractedData = extractData(data.$, data.finalUrl);
+            if (!extractedData) {
+                return { error: `Error extracting data from ${url}` };
+            }
 
-        processedCount += results.length;
-        console.log(`Batch ${i + 1}/${totalBatches} processed. Total processed: ${processedCount}/${urls.length}`);
-    }
+            return { data: extractedData, error: null };
+        } catch (error) {
+            return { error: `Error processing ${url}: ${error.message}` };
+        }
+    });
+
+    await writeResultsToAirtable(results);
 }
 
 main().catch(err => {
