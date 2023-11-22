@@ -6,3 +6,4 @@ package-lock.json
 source.csv
 *.cpuprofile
 *.vscode/
+src/log.txt

@@ -1,10 +1,12 @@
 // main.js
+import './components/Logger.js'; 
 import 'dotenv/config';
 import { readURLsFromAirtable } from './components/FileHandler.js';
 import { fetchData, extractData } from './components/DataFetcher.js';
 import { asyncPool } from './components/Concurrency.js';
-import { writeResultsToAirtable } from './components/ExcelWriter.js';
-import { cleanExistingRowsInAirtable } from './components/CleanErrors.js'; // Adjust the path to where your cleaning function is located
+import { writeResultsToAirtable } from './components/DataWriter.js';
+import { cleanExistingRowsInAirtable } from './components/CleanTable.js'; 
+console.log("Logger test"); // This should appear in your log.txt
 
 const CONCURRENT_LIMIT = 20;
 
