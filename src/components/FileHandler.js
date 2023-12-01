@@ -13,7 +13,7 @@ export async function readURLsFromAirtable() {
         console.log(`Reading URLs from Airtable...`);
         const records = await base(table).select().all();
 
-        return records.map(record => record.get('URLS')); // Use the correct column name
+        return records.map(record => record.get('URLS'));
     } catch (error) {
         console.warn(`Error reading URLs from Airtable:`, error.message);
         return [];

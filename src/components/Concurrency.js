@@ -12,11 +12,10 @@ export async function asyncPool(poolLimit, array, iteratorFn) {
             executing.splice(executing.indexOf(await Promise.race(executing)), 1);
         }
 
-        // After processing a batch of requests, pause for 4-8 seconds
         if (i % poolLimit === 0) {
             if (i !== 0) {
-                console.log('Pausing for 1-3 seconds...');
-                await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 3000)); // 4-8 seconds
+                console.log('Pausing for 3-5 seconds...');
+                await new Promise(resolve => setTimeout(resolve, Math.random() * 3000 + 5000));
             }
         }
     }

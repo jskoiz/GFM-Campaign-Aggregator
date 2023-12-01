@@ -7,3 +7,4 @@ source.csv
 *.cpuprofile
 *.vscode/
 src/log.txt
+src/photo-download

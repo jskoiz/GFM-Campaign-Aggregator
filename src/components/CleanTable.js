@@ -1,3 +1,4 @@
+//CleanTable.js
 import Airtable from 'airtable';
 
 export async function cleanExistingRowsInAirtable() {
@@ -20,7 +21,6 @@ export async function cleanExistingRowsInAirtable() {
 
         console.log(`Found ${recordsToDelete.length} records to delete.`);
 
-        // Deleting records in batches
         while(recordsToDelete.length > 0) {
             const batch = recordsToDelete.splice(0, 10);
             await base(table).destroy(batch);

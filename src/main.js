@@ -6,6 +6,7 @@ import { fetchData, extractData } from './components/DataFetcher.js';
 import { asyncPool } from './components/Concurrency.js';
 import { writeResultsToAirtable } from './components/DataWriter.js';
 import { cleanExistingRowsInAirtable } from './components/CleanTable.js'; 
+import { removeDuplicatesFromAirtable } from './components/DeleteDuplcates.js';
 
 const CONCURRENT_LIMIT = 20;
 
@@ -35,6 +36,7 @@ async function main() {
     });
 
     await writeResultsToAirtable(results);
+
 }
 
 main().catch(err => {

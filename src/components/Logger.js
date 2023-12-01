@@ -3,11 +3,9 @@ import path from 'path';
 import util from 'util';
 import { fileURLToPath } from 'url';
 
-// Get the directory name of the current module
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Construct the absolute path for log.txt in the repository directory
-const logFilePath = path.join(__dirname, '..', 'log.txt'); // Adjust the path as necessary
+const logFilePath = path.join(__dirname, '..', 'log.txt'); 
 
 const logFile = fs.createWriteStream(logFilePath, { flags: 'w' });
 const logStdout = process.stdout;
